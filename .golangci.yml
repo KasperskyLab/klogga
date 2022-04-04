@@ -1,0 +1,35 @@
+linters:
+  enable:
+    - govet
+    - gosimple
+    - bodyclose
+    - noctx
+    - structcheck
+    - varcheck
+    - deadcode
+    - typecheck
+    - rowserrcheck
+    - unconvert
+    - goconst
+    - durationcheck
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forcetypeassert
+    - gocognit
+    - goconst
+    - gosec
+    - ifshort
+    - makezero
+    - nestif
+    - nilerr
+
+issues:
+  exclude-rules:
+    - path: _stub\.go
+      linters:
+        - unused
+
+run:
+  concurrency: 8
+  tests: false
