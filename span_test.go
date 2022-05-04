@@ -5,9 +5,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"go.kl/klogga/constants/vals"
-	"go.kl/klogga/util/testutil"
+	"klogga/constants/vals"
+	"klogga/util/testutil"
 	"testing"
+	"time"
 )
 
 func TestSpanString(t *testing.T) {
@@ -25,6 +26,15 @@ func TestSpanString(t *testing.T) {
 	require.Contains(t, str, "TestSpanString()")
 
 	t.Log("str:", str)
+}
+
+func TestSpanDuration(t *testing.T) {
+	span := StartLeaf(context.Background())
+	time.Sleep(10 * time.Millisecond)
+	span.Stop()
+	require.True(t, span.IsFinished())
+	t.Log("duration", span.Duration())
+	require.InDelta(t, 10, span.Duration().Milliseconds(), 20)
 }
 
 func TestSpanIntAsString(t *testing.T) {
@@ -67,14 +77,7 @@ func TestWriterNoParent(t *testing.T) {
 	t.Logf("str: %s", str)
 }
 
-func TestSpanStop(t *testing.T) {
-	span := StartLeaf(context.Background())
-	span.Stop()
-	require.InDelta(t, 0, span.Duration().Milliseconds(), 10)
-}
-
 type La struct {
-	cl string
 }
 
 //go:noinline
@@ -129,13 +132,20 @@ func TestNoErrorSpan(t *testing.T) {
 }
 
 func TestSpanIdString(t *testing.T) {
-	id := NewTraceId()
-	span, _ := StartFromParentID(testutil.Timeout(), id)
+	span := StartLeaf(testutil.Timeout())
+	spanStr := span.Stringify()
+	require.Contains(t, spanStr, "id")
+	require.Contains(t, spanStr, span.ID().String())
+}
+
+func TestParentSpanIdString(t *testing.T) {
+	parentID := NewSpanID()
+	span := StartLeaf(testutil.Timeout(), WithParentSpanID(parentID))
 	spanStr := span.Stringify()
 	require.Contains(t, spanStr, "id")
 	require.Contains(t, spanStr, span.ID().String())
 	require.Contains(t, spanStr, "parent_id")
-	require.Contains(t, spanStr, id.String())
+	require.Contains(t, spanStr, parentID.String())
 }
 
 func TestSpanWarn(t *testing.T) {
@@ -176,10 +186,11 @@ func TestMapObjectNesting(t *testing.T) {
 		},
 		"int_val": 111,
 	}
-	span.ValAsObj("obj", mapObj)
+	span.ValAsObj(vals.ResponseBody, mapObj)
 
 	spanStr := span.Stringify()
 	t.Log("span", spanStr)
+	require.Contains(t, spanStr, vals.ResponseBody)
 	require.Contains(t, spanStr, "obj_struct")
 	require.Contains(t, spanStr, "danila")
 	require.Contains(t, spanStr, "int_val")
@@ -221,4 +232,64 @@ func TestIntValue(t *testing.T) {
 	span.Val(vals.Count, 444)
 	str := span.Stringify()
 	require.Contains(t, str, "count:'444'")
+}
+
+func TestInitHostname(t *testing.T) {
+	InitHostname()
+	span := StartLeaf(context.Background())
+
+	require.NotEmpty(t, span.Host())
+}
+
+func TestSetHostname(t *testing.T) {
+	SetHostname("test_host")
+	span := StartLeaf(context.Background())
+
+	require.Equal(t, "test_host", span.Host())
+}
+
+func TestOptions(t *testing.T) {
+	dt, _ := time.Parse(TimestampLayout, "2006-01-02 15:04:05.000")
+	tt := NewTraceID()
+	span := StartLeaf(
+		context.Background(),
+		WithTraceID(tt),
+		WithName("danilas"),
+		WithTimestamp(dt),
+	)
+	res := span.Stringify()
+	t.Log("span:", res)
+	require.Contains(t, res, "2006-01-02")
+	require.Contains(t, res, "danilas")
+	require.Contains(t, res, tt.String())
+}
+
+func TestMessageBasic(t *testing.T) {
+	span := Message("lalala")
+	res := span.Stringify()
+	require.Contains(t, res, "lalala")
+	require.Contains(t, res, " I ")
+}
+
+type impl struct {
+}
+
+func (i impl) DoSomething() {
+}
+
+func TestPgValueJsonbNil(t *testing.T) {
+	span := StartLeaf(testutil.Timeout())
+
+	type tester interface {
+		DoSomething()
+	}
+	zzNil := func() tester {
+		var rr *impl
+		return rr
+	}()
+
+	span.ValAsObj("is_nil", zzNil)
+
+	_, ok1 := span.Vals()["is_nil"]
+	require.False(t, ok1)
 }

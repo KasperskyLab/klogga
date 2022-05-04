@@ -2,7 +2,7 @@ package examples
 
 import (
 	"context"
-	"go.kl/klogga"
+	"klogga"
 	"testing"
 )
 

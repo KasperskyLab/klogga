@@ -2,7 +2,7 @@ package batcher
 
 import (
 	"context"
-	"go.kl/klogga"
+	"klogga"
 	"sync"
 )
 

@@ -1,0 +1,1 @@
+Exporter implementation fot influxDB 1.8.*

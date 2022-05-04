@@ -2,8 +2,8 @@ package klogga
 
 import (
 	"context"
-	"go.kl/klogga/util/errs"
-	"go.kl/klogga/util/reflectutil"
+	"klogga/util/errs"
+	"klogga/util/reflectutil"
 )
 
 // Factory combines different exporters
@@ -13,36 +13,54 @@ type Factory struct {
 	exporters ExportersSlice
 
 	// any errors are sent here
-	errExporter Exporter
+	// TBD
+	// errExporter Exporter
+}
+
+// TracerProvider use to allow components/adapters to have name overrides
+// implemented by Factory
+type TracerProvider interface {
+	NamedPkg() Tracer
+	Named(componentName ComponentName) Tracer
 }
 
 func NewFactory(exporters ...Exporter) *Factory {
 	return &Factory{exporters: exporters}
 }
 
-// tracer has a fixed component it writes to
-// component is reset for the span on the Finish call
-type tracerImpl struct {
-	componentName ComponentName
-	trs           Exporter
-}
-
 // Named creates a named tracer for specified component
 func (tf *Factory) Named(componentName ComponentName) Tracer {
-	return &tracerImpl{componentName: componentName, trs: tf.exporters}
+	return &tracerImpl{componentName: componentName, tf: tf}
 }
 
 // NamedPkg creates a named tracer with the name as package name, where this constructor is called
 func (tf *Factory) NamedPkg() Tracer {
 	p, _, _ := reflectutil.GetPackageClassFunc()
-	return &tracerImpl{
-		trs:           tf.exporters,
-		componentName: ComponentName(p),
-	}
+	return tf.Named(ComponentName(p))
 }
 
 func (tf *Factory) Shutdown(ctx context.Context) error {
 	return tf.exporters.Shutdown(ctx)
+}
+
+// AddExporter adds another exporter to the factory.
+// All  previously created tracers as well as new tracers will write to all exporters.
+// Do not use for concurrently executing goroutines that write spans.
+// Intended to be used in the sequential app initialization.
+func (tf *Factory) AddExporter(exporter Exporter) *Factory {
+	tf.exporters = append(tf.exporters, exporter)
+	return tf
+}
+
+func (tf *Factory) write(ctx context.Context, spans []*Span) error {
+	return tf.exporters.Write(ctx, spans)
+}
+
+// tracer has a fixed component it writes to
+// component is reset for the span on the Finish call
+type tracerImpl struct {
+	componentName ComponentName
+	tf            *Factory
 }
 
 func (t *tracerImpl) Name() ComponentName {
@@ -56,7 +74,10 @@ func (t *tracerImpl) Finish(span *Span) {
 		span.component = ComponentName(span.packageName)
 	}
 	span.Stop()
-	_ = t.trs.Write(context.Background(), []*Span{span})
+
+	// tracer shouldn't handle write errors
+	// exporters should deal with them their own way
+	_ = t.tf.write(context.Background(), []*Span{span})
 }
 
 type ComponentName string
@@ -68,12 +89,12 @@ func (c ComponentName) String() string {
 type ExportersSlice []Exporter
 
 func (t ExportersSlice) Write(ctx context.Context, spans []*Span) error {
-	var combinedErrs error
+	var childErrs error
 	for _, child := range t {
 		err := child.Write(ctx, spans)
-		combinedErrs = errs.Append(combinedErrs, err)
+		childErrs = errs.Append(childErrs, err)
 	}
-	return nil
+	return childErrs
 }
 
 func (t ExportersSlice) Shutdown(ctx context.Context) error {

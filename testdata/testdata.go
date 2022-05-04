@@ -3,7 +3,7 @@ package testdata
 import (
 	"context"
 	"github.com/pkg/errors"
-	"go.kl/klogga"
+	"klogga"
 )
 
 func DataBasicSpan() *klogga.Span {

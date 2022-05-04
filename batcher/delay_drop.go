@@ -2,8 +2,8 @@ package batcher
 
 import (
 	"context"
-	"go.kl/klogga"
 	"go.uber.org/atomic"
+	"klogga"
 	"time"
 )
 

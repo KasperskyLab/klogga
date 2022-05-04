@@ -6,7 +6,7 @@ import (
 )
 
 func Timeout() context.Context {
-	//nolint
+	//nolint:govet // cancel not needed in tests
 	timeout, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	return timeout
 }
