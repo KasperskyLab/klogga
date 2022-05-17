@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"klogga"
-	"klogga/exporters/golog"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/exporters/golog"
 	"time"
 )
 

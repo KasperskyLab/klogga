@@ -2,9 +2,9 @@ package pgconnector
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga/exporters/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"klogga/exporters/postgres"
 )
 
 // PgConnector the simplest PG connector implementation with sqlx

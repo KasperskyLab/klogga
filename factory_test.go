@@ -2,10 +2,10 @@ package klogga
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"klogga/util/testutil"
 	"testing"
 )
 

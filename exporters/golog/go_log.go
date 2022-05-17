@@ -2,7 +2,7 @@ package golog
 
 import (
 	"context"
-	"klogga"
+	"github.com/KasperskyLab/klogga"
 	"log"
 	"os"
 )

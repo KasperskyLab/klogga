@@ -3,7 +3,7 @@ package temporal
 import (
 	"context"
 	"fmt"
-	"klogga"
+	"github.com/KasperskyLab/klogga"
 )
 
 // AdapterRawMessage basic adapter of temporal logger to spans

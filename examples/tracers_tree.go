@@ -1,11 +1,11 @@
 package examples
 
 import (
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/batcher"
+	"github.com/KasperskyLab/klogga/exporters/golog"
+	"github.com/KasperskyLab/klogga/exporters/influxdb18"
 	client "github.com/influxdata/influxdb1-client"
-	"klogga"
-	"klogga/batcher"
-	"klogga/exporters/golog"
-	"klogga/exporters/influxdb18"
 )
 
 func CreateTracerTree() klogga.Exporter {

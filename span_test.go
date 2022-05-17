@@ -2,11 +2,11 @@ package klogga
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga/constants/vals"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"klogga/constants/vals"
-	"klogga/util/testutil"
 	"testing"
 	"time"
 )

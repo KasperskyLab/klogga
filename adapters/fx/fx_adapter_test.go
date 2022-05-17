@@ -2,13 +2,13 @@ package fx
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/exporters/golog"
+	"github.com/KasperskyLab/klogga/exporters/spancollector"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxtest"
-	"klogga"
-	"klogga/exporters/golog"
-	"klogga/exporters/spancollector"
-	"klogga/util/testutil"
 	"testing"
 )
 

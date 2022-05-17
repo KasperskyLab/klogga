@@ -2,9 +2,9 @@ package otel
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
 	trace_sdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
-	"klogga"
 )
 
 func NewTracerProvider(opts ...trace_sdk.TracerProviderOption) *trace_sdk.TracerProvider {

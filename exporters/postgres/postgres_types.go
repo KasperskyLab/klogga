@@ -3,8 +3,8 @@ package postgres
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/KasperskyLab/klogga"
 	"github.com/pkg/errors"
-	"klogga"
 	"reflect"
 	"strings"
 	"time"

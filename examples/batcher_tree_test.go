@@ -2,7 +2,7 @@ package examples
 
 import (
 	"context"
-	"klogga"
+	"github.com/KasperskyLab/klogga"
 	"testing"
 )
 

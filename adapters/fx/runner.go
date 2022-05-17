@@ -3,8 +3,8 @@ package fx
 import (
 	"context"
 	"fmt"
+	"github.com/KasperskyLab/klogga"
 	"go.uber.org/fx"
-	"klogga"
 	"reflect"
 )
 

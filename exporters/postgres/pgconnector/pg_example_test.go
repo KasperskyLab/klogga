@@ -2,12 +2,12 @@ package pgconnector
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/batcher"
+	"github.com/KasperskyLab/klogga/exporters/golog"
+	"github.com/KasperskyLab/klogga/exporters/postgres"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/stretchr/testify/require"
-	"klogga"
-	"klogga/batcher"
-	"klogga/exporters/golog"
-	"klogga/exporters/postgres"
-	"klogga/util/testutil"
 	"testing"
 )
 

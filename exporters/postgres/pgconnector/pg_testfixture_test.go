@@ -1,13 +1,13 @@
 package pgconnector
 
 import (
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/exporters/golog"
+	"github.com/KasperskyLab/klogga/exporters/postgres"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
-	"klogga"
-	"klogga/exporters/golog"
-	"klogga/exporters/postgres"
-	"klogga/util/testutil"
 	"testing"
 )
 

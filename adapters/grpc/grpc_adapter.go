@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"klogga"
+	"github.com/KasperskyLab/klogga"
 )
 
 type LoggerV2 struct {

@@ -2,11 +2,11 @@ package otel
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/util/errs"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"klogga"
-	"klogga/util/errs"
 	"time"
 )
 

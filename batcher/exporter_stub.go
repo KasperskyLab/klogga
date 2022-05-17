@@ -2,7 +2,7 @@ package batcher
 
 import (
 	"context"
-	"klogga"
+	"github.com/KasperskyLab/klogga"
 	"sync"
 )
 

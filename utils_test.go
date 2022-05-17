@@ -2,8 +2,8 @@ package klogga
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/stretchr/testify/require"
-	"klogga/util/testutil"
 	"strings"
 	"testing"
 )

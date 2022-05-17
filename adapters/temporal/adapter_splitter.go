@@ -3,8 +3,8 @@ package temporal
 import (
 	"context"
 	"fmt"
-	"klogga"
-	"klogga/util/stringutil"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/util/stringutil"
 )
 
 // AdapterSplitter basic adapter of temporal logger to spans

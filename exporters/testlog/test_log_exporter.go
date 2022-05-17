@@ -2,7 +2,7 @@ package testlog
 
 import (
 	"context"
-	"klogga"
+	"github.com/KasperskyLab/klogga"
 	"testing"
 )
 

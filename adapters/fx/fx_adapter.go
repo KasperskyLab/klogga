@@ -2,10 +2,10 @@ package fx
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/exporters/golog"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
-	"klogga"
-	"klogga/exporters/golog"
 	"reflect"
 	"strings"
 )

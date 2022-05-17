@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/KasperskyLab/klogga/constants"
+	"github.com/KasperskyLab/klogga/util/errs"
+	"github.com/KasperskyLab/klogga/util/reflectutil"
 	"github.com/pkg/errors"
-	"klogga/constants"
-	"klogga/util/errs"
-	"klogga/util/reflectutil"
 	"strings"
 	"time"
 )

@@ -2,12 +2,12 @@ package pgconnector
 
 import (
 	"encoding/json"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/constants/vals"
+	"github.com/KasperskyLab/klogga/exporters/postgres"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"klogga"
-	"klogga/constants/vals"
-	"klogga/exporters/postgres"
-	"klogga/util/testutil"
 	"testing"
 	"time"
 )

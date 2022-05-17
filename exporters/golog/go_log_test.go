@@ -3,9 +3,9 @@ package golog
 import (
 	"context"
 	"errors"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/stretchr/testify/require"
-	"klogga"
-	"klogga/util/testutil"
 	"testing"
 )
 

@@ -5,10 +5,10 @@ package influxdb18
 import (
 	"context"
 	"fmt"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/constants"
 	influxClient "github.com/influxdata/influxdb1-client"
 	"github.com/pkg/errors"
-	"klogga"
-	"klogga/constants"
 	"math"
 	"strings"
 )

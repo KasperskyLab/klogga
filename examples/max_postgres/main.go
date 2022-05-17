@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	fxAdapter "github.com/KasperskyLab/klogga/adapters/fx"
+	"github.com/KasperskyLab/klogga/batcher"
+	"github.com/KasperskyLab/klogga/exporters/postgres"
+	"github.com/KasperskyLab/klogga/exporters/postgres/pgconnector"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/fx"
-	"klogga"
-	fx2 "klogga/adapters/fx"
-	"klogga/batcher"
-	"klogga/exporters/postgres"
-	"klogga/exporters/postgres/pgconnector"
 	"net/http"
 	"os"
 	"time"
@@ -54,7 +54,7 @@ func createApp() fx.Option {
 				}()
 			},
 			func(r *Runner, lf fx.Lifecycle) {
-				lf.Append(fx2.ToHook(r))
+				lf.Append(fxAdapter.ToHook(r))
 			},
 		),
 	)

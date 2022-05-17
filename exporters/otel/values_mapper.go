@@ -2,8 +2,8 @@ package otel
 
 import (
 	"fmt"
+	"github.com/KasperskyLab/klogga"
 	"go.opentelemetry.io/otel/attribute"
-	"klogga"
 )
 
 func ConvertValue(val interface{}) attribute.Value {

@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/batcher"
+	"github.com/KasperskyLab/klogga/exporters/golog"
+	"github.com/KasperskyLab/klogga/exporters/postgres"
+	"github.com/KasperskyLab/klogga/exporters/postgres/pgconnector"
 	"go.uber.org/fx"
-	"klogga"
-	"klogga/batcher"
-	"klogga/exporters/golog"
-	"klogga/exporters/postgres"
-	"klogga/exporters/postgres/pgconnector"
 	"net/http"
 	"os"
 	"time"

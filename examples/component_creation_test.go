@@ -2,10 +2,10 @@ package examples
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/exporters/golog"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"klogga"
-	"klogga/exporters/golog"
 	"strings"
 	"testing"
 )

@@ -2,12 +2,12 @@ package influxdb18
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/golang/mock/gomock"
 	client "github.com/influxdata/influxdb1-client"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"klogga"
-	"klogga/util/testutil"
 	"math"
 	"testing"
 )

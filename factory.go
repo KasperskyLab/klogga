@@ -2,8 +2,8 @@ package klogga
 
 import (
 	"context"
-	"klogga/util/errs"
-	"klogga/util/reflectutil"
+	"github.com/KasperskyLab/klogga/util/errs"
+	"github.com/KasperskyLab/klogga/util/reflectutil"
 )
 
 // Factory combines different exporters

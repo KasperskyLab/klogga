@@ -2,8 +2,8 @@ package batcher
 
 import (
 	"context"
-	"klogga"
-	"klogga/util/errs"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/util/errs"
 	"sync"
 	"sync/atomic"
 	"time"

@@ -2,7 +2,7 @@ package spancollector
 
 import (
 	"context"
-	"klogga"
+	"github.com/KasperskyLab/klogga"
 )
 
 // SpanCollector just collects written spans to public array for inspection

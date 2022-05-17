@@ -1,4 +1,4 @@
-module klogga
+module github.com/KasperskyLab/klogga
 
 go 1.16
 
