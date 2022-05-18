@@ -145,7 +145,7 @@ func (e *Exporter) ConnFactory() Connector {
 func (e *Exporter) Shutdown(ctx context.Context) error {
 	span, ctx := klogga.Start(ctx)
 	defer e.trs.Finish(span)
-	pgErr := e.connFactory.Close(ctx)
+	pgErr := e.connFactory.Stop(ctx)
 	return span.Err(pgErr)
 }
 

@@ -14,7 +14,7 @@ import (
 func TestConnectPg(t *testing.T) {
 	// SETUP (arrange)
 	pgConn := &PgConnector{
-		ConnectionString: testutil.IntegrationEnv(t, "klogga_PG_CONNECTION_STRING"),
+		ConnectionString: testutil.IntegrationEnv(t, "KLOGGA_PG_CONNECTION_STRING"),
 	}
 	rawConn, err := pgConn.GetConnectionRaw(testutil.Timeout())
 	require.NoError(t, err)

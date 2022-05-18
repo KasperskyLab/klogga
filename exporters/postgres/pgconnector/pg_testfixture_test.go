@@ -6,7 +6,6 @@ import (
 	"github.com/KasperskyLab/klogga/exporters/postgres"
 	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/Masterminds/squirrel"
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -14,7 +13,7 @@ import (
 var psql = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 type SQLTestEx struct {
-	*sqlx.DB
+	*ManagedSql
 	t *testing.T
 }
 
@@ -45,8 +44,9 @@ func PgConn(t *testing.T) (*postgres.Exporter, SQLTestEx) {
 		t.Skip("longer integration test")
 	}
 	pgConn := &PgConnector{
-		ConnectionString: testutil.IntegrationEnv(t, "klogga_PG_CONNECTION_STRING"),
+		ConnectionString: testutil.IntegrationEnv(t, "KLOGGA_PG_CONNECTION_STRING"),
 	}
+	require.NoError(t, pgConn.Start(testutil.Timeout()))
 	conn, err := pgConn.GetConnectionRaw(testutil.Timeout())
 	require.NoError(t, err)
 

@@ -26,8 +26,12 @@ func createApp() fx.Option {
 				// so klogga doesn't have to have its own init() method
 				klogga.InitHostname()
 
-				conn := pgconnector.PgConnector{ConnectionString: os.Getenv("klogga_PG_CONNECTION_STRING")}
-				err := conn.CreateSchemaIfNotExists(context.Background(), postgres.DefaultSchema)
+				conn := pgconnector.PgConnector{ConnectionString: os.Getenv("KLOGGA_PG_CONNECTION_STRING")}
+				err := conn.Start(context.Background())
+				if err != nil {
+					return nil, err
+				}
+				err = conn.CreateSchemaIfNotExists(context.Background(), postgres.DefaultSchema)
 				if err != nil {
 					return nil, err
 				}
