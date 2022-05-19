@@ -1,63 +1,95 @@
-﻿====
-The file contains information about the dependencies which are used in the software.
-====
+﻿INFORMATION ABOUT THIRD-PARTY CODE
 
-github.com/Masterminds/squirrel 1.5.0
+-------
+This file contains information about dependencies which are used in the Klogga.
+
+
+atomic v1.9.0
+Copyright (c) 2016 Uber Technologies, Inc.
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+dig v1.13.0
+Copyright (c) 2017-2018 Uber Technologies, Inc.
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+fx v1.16.0
+Copyright (c) 2016-2018 Uber Technologies, Inc.
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+influxdb1-client v0.0.0-20200827194710-b269163b24ab
+Copyright (c) 2019 InfluxData
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+multierr v1.7.0
+Copyright (c) 2017-2021 Uber Technologies, Inc.
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+pq v1.10.4
+Copyright (c) 2011-2013, 'pq' Contributors
+Portions Copyright (C) 2011 Blake Mizerany
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+pretty v0.0.0-20200227124842-a10e7caefd8e
+Copyright 2012 Keith Rarick
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+sqlx v1.3.4
+Copyright (c) 2013, Jason Moiron
+-----
+Distributed under the terms of the MIT License (MIT)
+-----
+
+
+squirrel v1.5.2
 Copyright (C) 2014-2015, Lann Martin
 Copyright (C) 2015-2016, Google
 Copyright (C) 2015, Matt Farina and Matt Butcher
 -----
-Distributed under the terms of the MIT License
+Distributed under the terms of the MIT License (MIT)
 -----
 
 
-influxdata/influxdb1-client Commit b269163
-Copyright (c) 2019 InfluxData
+testify v1.7.0
+Copyright (c) 2012-2020 Mat Ryer, Tyler Bunnell and contributors.
 -----
-Distributed under the terms of the MIT License
------
-
-
-jmoiron/sqlx 1.3.4
-Copyright (c) 2013, Jason Moiron
------
-Distributed under the terms of the MIT License
+Distributed under the terms of the MIT License (MIT)
 -----
 
 
-lib/pq 1.10.2
-Copyright (c) 2011-2013, 'pq' Contributors Portions Copyright (C) 2011 Blake Mizerany
+text v0.2.0
+Copyright 2012 Keith Rarick
 -----
-Distributed under the terms of the MIT License
------
-
-
-satori/go.uuid v1.2.0
-Copyright (C) 2013-2018 by Maxim Bublis <b@codemonkey.ru>
------
-Distributed under the terms of the MIT License
+Distributed under the terms of the MIT License (MIT)
 -----
 
 
-stretchr/testify 1.7.0
-Copyright (c) 2012-2020 Mat Ryer, Tyler Bunnell and contributors
+zap v1.20.0
+Copyright (c) 2016-2017 Uber Technologies, Inc.
 -----
-Distributed under the terms of the MIT License
------
-
-
-go.uber.org/atomic 1.9.0
-Copyright (c) 2016 Uber Technologies, Inc.
------
-Distributed under the terms of the MIT License
+Distributed under the terms of the MIT License (MIT)
 -----
 
-
-go.uber.org/fx 1.15.0
-Copyright (c) 2016-2018 Uber Technologies, Inc.
------
-Distributed under the terms of the MIT License
------
 
 ==
 the MIT License
@@ -66,40 +98,120 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-golang/mock 1.6.0
-Copyright 2019 Google LLC
+
+check.v1 v1.0.0-20200227125254-8fa46927fb4f
+Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>.
+-----
+Distributed under the terms of the BSD License (two-clause)
+-----
+This library contains Benchmark.go distributed under the following terms:
+Copyright (c) 2012 The Go Authors. All rights reserved.
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Google Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+errors v0.9.1
+Copyright (c) 2015, Dave Cheney <dave@cheney.net>
+-----
+Distributed under the terms of the BSD License (two-clause)
+-----
+
+
+==
+The BSD License (two-clause)
+==
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+uuid v1.3.0
+Copyright (c) 2009,2014 Google Inc. All rights reserved.
+-----
+Distributed under the terms of the BSD License (three-clause)
+-----
+
+
+==
+the BSD License (three-clause) 
+==
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+client_golang v1.12.1
+Prometheus instrumentation library for Go applications
+Copyright 2012-2015 The Prometheus Authors
+-----
+Distributed under the terms of the Apache License Version 2.0
+-----
+This product includes software developed at SoundCloud Ltd. (http://soundcloud.com/).
+
+The following components are included in this product:
+
+perks - a fork of https://github.com/bmizerany/perks
+https://github.com/beorn7/perks
+Copyright 2013-2015 Blake Mizerany, Björn Rabenstein
+See https://github.com/beorn7/perks/blob/master/README.md for license details.
+
+Go support for Protocol Buffers - Google's data interchange format
+http://github.com/golang/protobuf/
+Copyright 2010 The Go Authors
+See source code for license details.
+
+Support for streaming Protocol Buffer messages for the Go language (golang).
+https://github.com/matttproud/golang_protobuf_extensions
+Copyright 2013 Matt T. Proud
+Licensed under the Apache License, Version 2.0
+
+
+
+mock v1.6.0
+Alex Reece <awreece@gmail.com>
+Google Inc.
 -----
 Distributed under the terms of the Apache License Version 2.0
 -----
 
 
-go.opentelemetry.io/otel 1.0.1
+otel v1.3.0
 Copyright The OpenTelemetry Authors
 -----
 Distributed under the terms of the Apache License Version 2.0
 -----
 
 
-go.opentelemetry.io/otel/exporters/stdout/stdouttrace 1.0.1
+sdk v1.3.0
 Copyright The OpenTelemetry Authors
 -----
 Distributed under the terms of the Apache License Version 2.0
 -----
 
 
-go.opentelemetry.io/otel/sdk 1.0.1
+stdouttrace v1.3.0
 Copyright The OpenTelemetry Authors
 -----
 Distributed under the terms of the Apache License Version 2.0
 -----
 
 
-go.opentelemetry.io/otel/trace 1.0.1
+trace v1.3.0
 Copyright The OpenTelemetry Authors
 -----
 Distributed under the terms of the Apache License Version 2.0
 -----
 
+
+==
+the Apache License Version 2.0 
+==
 Apache License
 Version 2.0, January 2004
 http://www.apache.org/licenses/ 
@@ -128,10 +240,25 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
 9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability.
 END OF TERMS AND CONDITIONS
-
-hashicorp/go-multierror 1.1.1
-https://github.com/hashicorp/go-multierror
 -----
+
+
+errwrap v1.1.0
+https://github.com/hashicorp/errwrap/tree/v1.1.0
+-----
+Distributed under the terms of the Mozilla Public License, version 2.0
+-----
+
+
+go-multierror v1.1.1
+https://github.com/hashicorp/go-multierror/tree/v1.1.1
+-----
+Distributed under the terms of the Mozilla Public License, version 2.0
+-----
+
+==
+the Mozilla Public License, version 2.0
+==
 Mozilla Public License, version 2.0
 1. Definitions
 1.1. “Contributor” means each individual or legal entity that creates, contributes to the creation of, or owns Covered Software.
@@ -215,14 +342,3 @@ If it is not possible or desirable to put the notice in a particular file, then 
 You may add additional accurate notices of copyright ownership.
 Exhibit B - “Incompatible With Secondary Licenses” Notice
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
------
-
-pkg/errors 0.9.1
-Copyright (c) 2015, Dave Cheney <dave@cheney.net>
-All rights reserved.
------
-The BSD 2-Clause License
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
