@@ -71,3 +71,17 @@ func (o withDurationOption) apply(span *Span) {
 	span.duration = o.duration
 	span.finishedTs = o.ts.Add(o.duration)
 }
+
+type withPackageClassOption struct {
+	p, c string
+}
+
+// WithPackageClass overrides reflection-retrieved package and class
+func WithPackageClass(p, c string) SpanOption {
+	return &withPackageClassOption{p: p, c: c}
+}
+
+func (o withPackageClassOption) apply(span *Span) {
+	span.packageName = o.p
+	span.className = o.c
+}

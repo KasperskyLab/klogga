@@ -48,12 +48,8 @@ type Span struct {
 
 // Start preferred way to start a new span, automatically sets basic span fields like class, name, host
 func Start(ctx1 context.Context, opts ...SpanOption) (span *Span, ctx context.Context) {
-	packageName, className, funcName := reflectutil.GetPackageClassFunc()
 	span = &Span{
 		id:             NewSpanID(),
-		packageName:    packageName,
-		className:      className,
-		name:           funcName,
 		host:           host,
 		startedTs:      time.Now(),
 		tags:           map[string]interface{}{},
@@ -77,13 +73,29 @@ func Start(ctx1 context.Context, opts ...SpanOption) (span *Span, ctx context.Co
 		opt.apply(span)
 	}
 
+	if span.packageName == "" || span.className == "" || span.name == "" {
+		packageName, className, funcName := reflectutil.GetPackageClassFunc()
+		if span.packageName == "" {
+			span.packageName = packageName
+		}
+		if span.className == "" {
+			span.className = className
+		}
+		if span.name == "" {
+			span.name = funcName
+		}
+	}
+
 	return span, context.WithValue(ctx1, activeSpanKey{}, span)
 }
 
 // StartLeaf start new span without returning resulting context i.e. no child spans possibility
 func StartLeaf(ctx context.Context, opts ...SpanOption) (span *Span) {
 	packageName, className, funcName := reflectutil.GetPackageClassFunc()
-	span, _ = Start(ctx, append([]SpanOption{WithName(funcName)}, opts...)...)
+	span, _ = Start(ctx, append([]SpanOption{
+		WithName(funcName),
+		WithPackageClass(packageName, className),
+	}, opts...)...)
 	span.packageName = packageName
 	span.className = className
 	return span
@@ -94,9 +106,10 @@ func StartLeaf(ctx context.Context, opts ...SpanOption) (span *Span) {
 // It is strongly discouraged to use Message unless for testing purposes.
 func Message(message string, opts ...SpanOption) *Span {
 	packageName, className, funcName := reflectutil.GetPackageClassFunc()
-	span, _ := Start(context.Background(), append([]SpanOption{WithName(funcName)}, opts...)...)
-	span.packageName = packageName
-	span.className = className
+	span, _ := Start(context.Background(), append([]SpanOption{
+		WithPackageClass(packageName, className),
+		WithName(funcName),
+	}, opts...)...)
 	span.Message(message)
 	return span
 }
@@ -105,10 +118,7 @@ func Message(message string, opts ...SpanOption) *Span {
 // Deprecated: use SpanOptions
 func StartFromParentID(ctx context.Context, parentSpanID SpanID, traceID TraceID) (*Span, context.Context) {
 	p, c, f := reflectutil.GetPackageClassFunc()
-	span, ctx := Start(ctx)
-	span.packageName = p
-	span.className = c
-	span.name = f
+	span, ctx := Start(ctx, WithPackageClass(p, c), WithName(f))
 	span.parentID = parentSpanID
 	span.traceID = traceID
 	return span, ctx
