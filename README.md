@@ -4,10 +4,5 @@ Data collected via klogga can be configured to be exported to different sources,
 
 # Getting Started
 import klogga
-cofigure your root tracer	
-
-# Build and Test
-go test ./...
-
-# Contribute
-ask Danila
+configure your root tracer, don't forget to use batcher for buffered traces
+see examples/tracers_tree.go

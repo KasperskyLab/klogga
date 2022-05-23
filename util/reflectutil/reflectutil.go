@@ -6,7 +6,8 @@ import (
 	"strings"
 )
 
-// GetPackageClassFunc parses package (last entry in the path), class(==receiver type) and func for the call one level up
+// GetPackageClassFunc parses package (last entry in the path),
+// class(==receiver type) and func for the call one level up
 func GetPackageClassFunc() (string, string, string) {
 	pc := make([]uintptr, 10)
 	runtime.Callers(2, pc)

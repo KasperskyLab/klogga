@@ -1,9 +1,9 @@
 package batcher
 
 import (
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/stretchr/testify/require"
-	"go.kl/klogga"
-	"go.kl/klogga/util/testutil"
 	"testing"
 	"time"
 )
@@ -15,16 +15,16 @@ func TestBatches(t *testing.T) {
 		sps = append(sps, klogga.StartLeaf(testutil.Timeout()))
 	}
 	exporter := &exporterStub{}
-	batcher := New(exporter, ConfigDefault())
-	trs := klogga.NewFactory(batcher).NamedPkg()
+	bb := New(exporter, ConfigDefault())
+	trs := klogga.NewFactory(bb).NamedPkg()
 	for _, sp := range sps {
 		trs.Finish(sp)
 	}
-	batcher.TriggerFlush()
 
-	time.Sleep(100 * time.Millisecond)
-
+	err := bb.Shutdown(testutil.Timeout())
+	require.NoError(t, err)
 	require.Len(t, exporter.GetSpans(), spansCount)
+	require.Equal(t, uint64(spansCount), bb.FlushedCount())
 }
 
 func TestWriteAllOnClose(t *testing.T) {
@@ -34,20 +34,21 @@ func TestWriteAllOnClose(t *testing.T) {
 
 	}
 	exporter := &exporterStub{}
-	rawTracer := New(
+	bb := New(
 		exporter, Config{
 			BatchSize: 10,
 			Timeout:   5 * time.Second,
 		},
 	)
-	trs := klogga.NewFactory(rawTracer).NamedPkg()
+	trs := klogga.NewFactory(bb).NamedPkg()
 	for _, sp := range sps {
 		sp.FlushTo(trs)
 	}
-	err := rawTracer.Shutdown(testutil.Timeout())
+	err := bb.Shutdown(testutil.Timeout())
 	require.NoError(t, err)
 
 	require.Len(t, exporter.GetSpans(), cap(sps))
+	require.Equal(t, uint64(cap(sps)), bb.FlushedCount())
 }
 
 func TestBatchPerTimer(t *testing.T) {

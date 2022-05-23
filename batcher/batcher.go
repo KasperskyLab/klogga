@@ -2,19 +2,23 @@ package batcher
 
 import (
 	"context"
-	"go.kl/klogga"
-	"go.kl/klogga/util/errs"
+	"github.com/KasperskyLab/klogga"
+	"github.com/KasperskyLab/klogga/util/errs"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
-type batcher struct {
+// Batcher collects spans to send them to exporters in batches
+type Batcher struct {
 	exporter klogga.Exporter
 	conf     Config
 
 	spans chan *klogga.Span
 
-	cond *sync.Cond
+	flushedCount uint64
+	erredCount   uint64
+	cond         *sync.Cond
 
 	tm   *time.Timer
 	stop chan struct{}
@@ -47,8 +51,10 @@ func ConfigDefault() Config {
 	}
 }
 
-func New(exporter klogga.Exporter, conf Config) *batcher {
-	b := &batcher{
+// New constructs and starts the Batcher
+// beware that errors from the exporter are ignored, so if you really need them use a decorator or something
+func New(exporter klogga.Exporter, conf Config) *Batcher {
+	b := &Batcher{
 		exporter: exporter,
 		conf:     conf,
 		spans:    make(chan *klogga.Span, conf.GetBufferSize()),
@@ -60,7 +66,15 @@ func New(exporter klogga.Exporter, conf Config) *batcher {
 	return b
 }
 
-func (b *batcher) start() {
+func (b *Batcher) FlushedCount() (res uint64) {
+	return atomic.LoadUint64(&b.flushedCount)
+}
+
+func (b *Batcher) ErredCount() (res uint64) {
+	return atomic.LoadUint64(&b.erredCount)
+}
+
+func (b *Batcher) start() {
 	b.tm = time.AfterFunc(
 		b.conf.Timeout, func() {
 			b.cond.Signal()
@@ -75,7 +89,12 @@ func (b *batcher) start() {
 				case span := <-b.spans:
 					toFlush = append(toFlush, span)
 					if len(b.spans) == 0 || len(toFlush) >= b.conf.BatchSize {
-						_ = b.exporter.Write(context.Background(), toFlush)
+						err := b.exporter.Write(context.Background(), toFlush)
+						if err != nil {
+							atomic.AddUint64(&b.erredCount, uint64(len(toFlush)))
+						} else {
+							atomic.AddUint64(&b.flushedCount, uint64(len(toFlush)))
+						}
 						toFlush = toFlush[:0]
 						continue
 					}
@@ -97,7 +116,7 @@ func (b *batcher) start() {
 	}()
 }
 
-func (b *batcher) Write(ctx context.Context, spans []*klogga.Span) error {
+func (b *Batcher) Write(ctx context.Context, spans []*klogga.Span) error {
 	for _, span := range spans {
 		select {
 		case b.spans <- span:
@@ -111,7 +130,7 @@ func (b *batcher) Write(ctx context.Context, spans []*klogga.Span) error {
 	return nil
 }
 
-func (b *batcher) Shutdown(ctx context.Context) (err error) {
+func (b *Batcher) Shutdown(ctx context.Context) (err error) {
 	b.TriggerFlush()
 	select {
 	case b.stop <- struct{}{}:
@@ -122,6 +141,6 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 }
 
 // TriggerFlush asynchronously writes queue content to writer
-func (b *batcher) TriggerFlush() {
+func (b *Batcher) TriggerFlush() {
 	b.cond.Signal()
 }

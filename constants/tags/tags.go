@@ -7,7 +7,7 @@ const (
 	Login  = "login"
 	User   = "user"
 	Group  = "group"
-	Ip     = "ip"
+	IP     = "ip"
 	Host   = "host"
 	Method = "method"
 	Path   = "path"
@@ -15,9 +15,9 @@ const (
 	PagerFrom  = "page_from"
 	PagerCount = "page_count"
 
-	HttpStatus = "http_status"
+	HTTPStatus = "http_status"
 
-	Url   = "url"
+	URL   = "url"
 	Email = "email"
 	Role  = "role"
 )

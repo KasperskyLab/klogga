@@ -1,7 +1,7 @@
 package errs
 
 import (
-	"github.com/hashicorp/go-multierror"
+	mr "github.com/hashicorp/go-multierror"
 )
 
 // Append concatenates errors into one, creating a clean message if there is only one error
@@ -18,5 +18,5 @@ func Append(err error, errs ...error) error {
 	} else if err == nil && len(cleanErrs) == 1 {
 		return cleanErrs[0]
 	}
-	return multierror.Append(err, cleanErrs...)
+	return mr.Append(err, cleanErrs...)
 }

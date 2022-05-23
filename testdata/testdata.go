@@ -2,8 +2,8 @@ package testdata
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga"
 	"github.com/pkg/errors"
-	"go.kl/klogga"
 )
 
 func DataBasicSpan() *klogga.Span {
