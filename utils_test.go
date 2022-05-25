@@ -2,8 +2,8 @@ package klogga
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/stretchr/testify/require"
-	"go.kl/klogga/util/testutil"
 	"strings"
 	"testing"
 )
@@ -11,7 +11,7 @@ import (
 func TestWriterAdapter(t *testing.T) {
 	span := StartLeaf(context.Background()).Tag("data", "334")
 	sb := strings.Builder{}
-	rTrs := NewWriterAdapter(&sb)
+	rTrs := NewWriterExporter(&sb)
 	defer func() { require.NoError(t, rTrs.Shutdown(testutil.Timeout())) }()
 	span.FlushTo(NewFactory(rTrs).NamedPkg())
 	str := sb.String()

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/KasperskyLab/klogga/constants"
+	"github.com/KasperskyLab/klogga/util/errs"
+	"github.com/KasperskyLab/klogga/util/reflectutil"
 	"github.com/pkg/errors"
-	"go.kl/klogga/constants/vals"
-	"go.kl/klogga/util/errs"
-	"go.kl/klogga/util/reflectutil"
 	"strings"
 	"time"
 )
@@ -16,9 +16,11 @@ import (
 // Span is a (TODO) serializable
 // and independent of the way it is exported (traced) to any storage
 type Span struct {
-	id        TraceId
-	startedTs time.Time
-	component ComponentName
+	id         SpanID
+	traceID    TraceID
+	startedTs  time.Time
+	finishedTs time.Time
+	component  ComponentName
 
 	name        string // usually a calling func name is used
 	className   string // name of the struct
@@ -29,7 +31,7 @@ type Span struct {
 	host string // machine name where span was created
 
 	parent   *Span
-	parentID TraceId
+	parentID SpanID
 
 	duration time.Duration
 
@@ -42,81 +44,114 @@ type Span struct {
 	errs      error
 	warns     error
 	deferErrs error
-
-	finished bool
 }
 
 // Start preferred way to start a new span, automatically sets basic span fields like class, name, host
-func Start(ctx context.Context) (*Span, context.Context) {
-	packageName, className, funcName := reflectutil.GetPackageClassFunc()
-	span := &Span{
-		id:             NewTraceId(),
-		packageName:    packageName,
-		className:      className,
-		name:           funcName,
+func Start(ctx1 context.Context, opts ...SpanOption) (span *Span, ctx context.Context) {
+	span = &Span{
+		id:             NewSpanID(),
 		host:           host,
-		startedTs:      time.Now().UTC(),
+		startedTs:      time.Now(),
 		tags:           map[string]interface{}{},
 		vals:           map[string]interface{}{},
 		propagatedTags: map[string]interface{}{},
 	}
 
-	if p := CtxActiveSpan(ctx); p != nil {
+	if p := CtxActiveSpan(ctx1); p != nil {
 		span.parent = p
 		span.parentID = p.id
+		span.traceID = p.traceID
 		for k, v := range p.propagatedTags {
 			span.propagatedTags[k] = v
 			span.Tag(k, v)
 		}
+	} else {
+		span.traceID = NewTraceID()
 	}
 
-	return span, context.WithValue(ctx, activeSpanKey, span)
+	for _, opt := range opts {
+		opt.apply(span)
+	}
+
+	if span.packageName == "" || span.className == "" || span.name == "" {
+		packageName, className, funcName := reflectutil.GetPackageClassFunc()
+		if span.packageName == "" {
+			span.packageName = packageName
+		}
+		if span.className == "" {
+			span.className = className
+		}
+		if span.name == "" {
+			span.name = funcName
+		}
+	}
+
+	return span, context.WithValue(ctx1, activeSpanKey{}, span)
 }
 
 // StartLeaf start new span without returning resulting context i.e. no child spans possibility
-func StartLeaf(ctx context.Context) *Span {
+func StartLeaf(ctx context.Context, opts ...SpanOption) (span *Span) {
 	packageName, className, funcName := reflectutil.GetPackageClassFunc()
-	span, _ := Start(ctx)
+	span, _ = Start(ctx, append([]SpanOption{
+		WithName(funcName),
+		WithPackageClass(packageName, className),
+	}, opts...)...)
 	span.packageName = packageName
 	span.className = className
-	span.name = funcName
+	return span
+}
+
+// Message is the simplest way to start a span, in the shortest way possible
+// it doesn't use context, and doesn't return one.
+// It is strongly discouraged to use Message unless for testing purposes.
+func Message(message string, opts ...SpanOption) *Span {
+	packageName, className, funcName := reflectutil.GetPackageClassFunc()
+	span, _ := Start(context.Background(), append([]SpanOption{
+		WithPackageClass(packageName, className),
+		WithName(funcName),
+	}, opts...)...)
+	span.Message(message)
 	return span
 }
 
 // StartFromParentID starts new span with externally defined parent span ID
-func StartFromParentID(ctx context.Context, parentSpanID TraceId) (*Span, context.Context) {
+// Deprecated: use SpanOptions
+func StartFromParentID(ctx context.Context, parentSpanID SpanID, traceID TraceID) (*Span, context.Context) {
 	p, c, f := reflectutil.GetPackageClassFunc()
-	span, ctx := Start(ctx)
-	span.packageName = p
-	span.className = c
-	span.name = f
+	span, ctx := Start(ctx, WithPackageClass(p, c), WithName(f))
 	span.parentID = parentSpanID
+	span.traceID = traceID
 	return span, ctx
 }
 
-func (s Span) ID() TraceId {
+func (s *Span) ID() SpanID {
 	return s.id
 }
 
-func (s Span) Parent() *Span {
+func (s *Span) TraceID() TraceID {
+	return s.traceID
+}
+
+func (s *Span) Parent() *Span {
 	return s.parent
 }
 
 func (s *Span) Stop() {
 	// no need to sync this, as the race won't matter
-	if !s.finished {
-		s.finished = true
-		s.duration = time.Since(s.startedTs)
+	if !s.finishedTs.IsZero() {
+		return
 	}
+	s.finishedTs = time.Now()
+	s.duration = s.finishedTs.Sub(s.startedTs)
 }
 
 func (s *Span) IsFinished() bool {
-	return s.finished
+	return !s.finishedTs.IsZero()
 }
 
-func (s *Span) ParentID() TraceId {
+func (s *Span) ParentID() SpanID {
 	if s == nil {
-		return TraceId{}
+		return SpanID{}
 	}
 	return s.parentID
 }
@@ -185,7 +220,9 @@ type ObjectVal struct {
 	obj interface{}
 }
 
-func NewObjectVal(obj interface{}) *ObjectVal {
+// ValObject explicitly indicates that the underlying value is a nested object,
+// to be stored in a complex field like jsonb
+func ValObject(obj interface{}) *ObjectVal {
 	return &ObjectVal{obj: obj}
 }
 
@@ -198,15 +235,44 @@ func (o ObjectVal) String() string {
 	return string(bb)
 }
 
-// ValAsObj same any object as value. Different storages will try to use
-// their corresponding type to store it
-// string representation is JSON by default
+type StringAsJSONVal struct {
+	v []byte
+}
+
+// ValJson Use to directly inform klogga that is value is a valid json
+// and no conversion is needed
+func ValJson(v string) *ObjectVal {
+	//return &ObjectVal{obj: StringAsJSONVal{v: []byte(v)}}
+	jj := json.RawMessage(v)
+	if v == "" {
+		jj = json.RawMessage(nil)
+	}
+	return &ObjectVal{obj: jj}
+}
+
+func (o StringAsJSONVal) MarshalJSON() ([]byte, error) {
+	if len(o.v) == 0 {
+		return []byte("{}"), nil
+	}
+	return o.v, nil
+}
+
+func (o StringAsJSONVal) String() string {
+	return string(o.v)
+}
+
+// ValAsObj shorthand for .Val(key, klogga.ValObject(value))
 func (s *Span) ValAsObj(key string, value interface{}) *Span {
-	if value == nil {
+	if reflectutil.IsNil(value) {
 		return s
 	}
-	s.Val(key, NewObjectVal(value))
+	s.Val(key, ValObject(value))
 	return s
+}
+
+// ValAsJson shorthand for .Val(key, klogga.ValJson(value))
+func (s *Span) ValAsJson(key string, value string) *Span {
+	return s.Val(key, ValJson(value))
 }
 
 // GlobalTag set the tag that is also propagated to all child spans
@@ -257,6 +323,7 @@ func (s *Span) ErrRecover(rec interface{}, stackBytes []byte) *Span {
 	if err, ok := rec.(error); ok {
 		s.ErrVoid(errors.Wrap(err, string(stackBytes)))
 	} else {
+		//nolint:goerr113 // special case when recovering panic with alternative type
 		s.ErrVoid(errors.Wrap(fmt.Errorf("%v", rec), string(stackBytes)))
 	}
 	return s
@@ -364,7 +431,7 @@ func (s *Span) Stack() []*Span {
 // Duration returns current duration for running span
 // returns total duration for stopped span
 func (s *Span) Duration() time.Duration {
-	if s.finished {
+	if s.IsFinished() {
 		return s.duration
 	}
 	return time.Since(s.startedTs)
@@ -385,7 +452,7 @@ func (s *Span) HasDeferErr() bool {
 // Stringify full span data string
 // to be used in text tracers
 // deliberately ignores host field
-func (s *Span) Stringify() string {
+func (s *Span) Stringify(endWith ...string) string {
 	if s == nil {
 		return ""
 	}
@@ -441,9 +508,14 @@ func (s *Span) Stringify() string {
 		sb.WriteString(fmt.Sprintf("; id: %s", s.id))
 	}
 	if !s.parentID.IsZero() {
-		sb.WriteString(fmt.Sprintf("; %s: %s", vals.ParentSpanId, s.parentID))
+		sb.WriteString(fmt.Sprintf("; %s: %s", constants.ParentSpanID, s.parentID))
 	}
-
+	if !s.traceID.IsZero() {
+		sb.WriteString(fmt.Sprintf("; trace: %s", s.traceID))
+	}
+	for _, end := range endWith {
+		sb.WriteString(end)
+	}
 	return sb.String()
 }
 
@@ -463,8 +535,9 @@ func (s *Span) Json() ([]byte, error) {
 	}
 
 	jsonStruct := struct {
-		ID           TraceId
-		ParentID     TraceId
+		ID           SpanID
+		ParentID     SpanID
+		TraceID      TraceID
 		Ts           string
 		Level        string
 		PackageClass string
@@ -478,6 +551,7 @@ func (s *Span) Json() ([]byte, error) {
 	}{
 		ID:           s.id,
 		ParentID:     s.parentID,
+		TraceID:      s.traceID,
 		Ts:           s.startedTs.Format(TimestampLayout),
 		Level:        s.EWState(),
 		PackageClass: s.PackageClass(),
@@ -492,7 +566,7 @@ func (s *Span) Json() ([]byte, error) {
 	return json.Marshal(&jsonStruct)
 }
 
-// FlushTo accept tracer and call Write
+// FlushTo accept tracer and call trs.Finish, shorthand for chaining
 func (s *Span) FlushTo(trs Tracer) {
 	trs.Finish(s)
 }
@@ -503,7 +577,7 @@ func CreateErrSpanFrom(ctx context.Context, span *Span) *Span {
 		return nil
 	}
 
-	errSpan, _ := StartFromParentID(ctx, span.ID())
+	errSpan := StartLeaf(ctx, WithTraceID(span.TraceID()))
 	errSpan.parent = span
 	errSpan.startedTs = span.StartedTs()
 	errSpan.Tag("component", span.Component())

@@ -16,8 +16,7 @@ func Default(str string, def string) string {
 }
 
 func MaxLen(str string, maxLen int) string {
-	r := []rune(str)
-	if len(r) > maxLen {
+	if r := []rune(str); len(r) > maxLen {
 		return string(r[:maxLen])
 	}
 	return str

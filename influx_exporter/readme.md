@@ -1,1 +1,0 @@
-Tracer implementation fot influxDB 1.8.*

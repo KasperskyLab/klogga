@@ -2,9 +2,10 @@ package klogga
 
 import (
 	"context"
+	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"go.kl/klogga/util/testutil"
 	"testing"
 )
 
@@ -56,4 +57,14 @@ func TestSetComponent(t *testing.T) {
 	)
 	mockTrs.EXPECT().Shutdown(gomock.Any())
 	span.FlushTo(trs)
+}
+
+func TestExportersSlice_Write(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	exporter := NewMockExporter(ctrl)
+	exporter.EXPECT().Write(gomock.Any(), gomock.Any()).Return(errors.New("failed to write"))
+
+	err := ExportersSlice{exporter}.Write(testutil.Timeout(), SpanSlice{})
+	require.Error(t, err)
 }

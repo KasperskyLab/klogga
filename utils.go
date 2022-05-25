@@ -12,22 +12,22 @@ import (
 
 const TimestampLayout = "2006-01-02 15:04:05.000"
 
-type WriterAdapter struct {
+type WriterExporter struct {
 	w io.Writer
 }
 
-func NewWriterAdapter(writer io.Writer) *WriterAdapter {
-	return &WriterAdapter{w: writer}
+func NewWriterExporter(writer io.Writer) *WriterExporter {
+	return &WriterExporter{w: writer}
 }
 
-func (w WriterAdapter) Write(ctx context.Context, spans []*Span) error {
+func (w WriterExporter) Write(ctx context.Context, spans []*Span) error {
 	for _, span := range spans {
-		_, _ = w.w.Write([]byte(span.Stringify() + "\n"))
+		_, _ = w.w.Write([]byte(span.Stringify("\n")))
 	}
 	return nil
 }
 
-func (w WriterAdapter) Shutdown(context.Context) error {
+func (w WriterExporter) Shutdown(context.Context) error {
 	return nil
 }
 
@@ -73,8 +73,9 @@ func RoundDur(d time.Duration) string {
 	}
 }
 
-// NewTestErrTracker wraps tracer to fail test on the span error
+// NewTestErrTracker wraps tracer to fail test on the span error.
 func NewTestErrTracker(t *testing.T, trs Tracer) Tracer {
+	t.Helper()
 	return errorTracker{
 		t:   t,
 		trs: trs,
