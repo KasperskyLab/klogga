@@ -26,17 +26,17 @@ func NewTableSchema(columns []*ColumnSchema) *TableSchema {
 	}
 }
 
-func (t TableSchema) ColumnsCount() int {
+func (t *TableSchema) ColumnsCount() int {
 	return len(t.columns)
 }
 
-func (t TableSchema) ColumnNames() []string {
+func (t *TableSchema) ColumnNames() []string {
 	return t.columnsNames
 }
 
 // GetAlterSchema returns missing columns' schema
 // returns spans that cannot be written just by adding columns
-func (t TableSchema) GetAlterSchema(dataset RecordSet) (*TableSchema, []ErrDescriptor) {
+func (t *TableSchema) GetAlterSchema(dataset RecordSet) (*TableSchema, []ErrDescriptor) {
 	alterSchema := NewTableSchema([]*ColumnSchema{})
 	errDescriptors := make([]ErrDescriptor, 0)
 
@@ -72,7 +72,7 @@ func (t *TableSchema) Merge(newCols []*ColumnSchema) *TableSchema {
 	return tCopy
 }
 
-func (t TableSchema) Column(name string) (*ColumnSchema, bool) {
+func (t *TableSchema) Column(name string) (*ColumnSchema, bool) {
 	col, ok := t.mm[name]
 	return col, ok
 }
@@ -85,12 +85,12 @@ func (t *TableSchema) AddColumn(col ColumnSchema) {
 	t.mm[col.Name] = &col
 }
 
-func (t TableSchema) Columns() []*ColumnSchema {
+func (t *TableSchema) Columns() []*ColumnSchema {
 	return t.columns
 }
 
 // InsertStatement NOT injection safe
-func (t TableSchema) InsertStatement(schema string, tableName string) string {
+func (t *TableSchema) InsertStatement(schema string, tableName string) string {
 	paramsStr := "$1"
 	for i := 2; i <= t.ColumnsCount(); i++ {
 		paramsStr += fmt.Sprintf(",$%v", i)
@@ -104,7 +104,7 @@ func (t TableSchema) InsertStatement(schema string, tableName string) string {
 }
 
 // CreateTableStatement NOT injection safe
-func (t TableSchema) CreateTableStatement(schema, tableName string, timeCol *ColumnSchema, useTimescale bool) string {
+func (t *TableSchema) CreateTableStatement(schema, tableName string, timeCol *ColumnSchema, useTimescale bool) string {
 	b := strings.Builder{}
 
 	b.WriteString(fmt.Sprintf("CREATE TABLE %s.%s\n", schema, tableName))
@@ -126,7 +126,7 @@ func (t TableSchema) CreateTableStatement(schema, tableName string, timeCol *Col
 }
 
 // AlterTableStatement NOT injection safe
-func (t TableSchema) AlterTableStatement(schema, tableName string) string {
+func (t *TableSchema) AlterTableStatement(schema, tableName string) string {
 	b := strings.Builder{}
 	b.WriteString(fmt.Sprintf("ALTER TABLE %v.%v\n", schema, tableName))
 
@@ -152,7 +152,7 @@ type ColumnSchema struct {
 	IsNullable  bool
 }
 
-func (s ColumnSchema) SQL() string {
+func (s *ColumnSchema) SQL() string {
 	nullableStr := "null"
 	if !s.IsNullable {
 		nullableStr = "not " + nullableStr

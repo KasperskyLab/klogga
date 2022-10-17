@@ -35,7 +35,7 @@ func (tf *Factory) Named(componentName ComponentName) Tracer {
 
 // NamedPkg creates a named tracer with the name as package name, where this constructor is called
 func (tf *Factory) NamedPkg() Tracer {
-	p, _, _ := reflectutil.GetPackageClassFunc()
+	p, _, _ := reflectutil.GetPackageClassFunc(2)
 	return tf.Named(ComponentName(p))
 }
 
@@ -49,6 +49,12 @@ func (tf *Factory) Shutdown(ctx context.Context) error {
 // Intended to be used in the sequential app initialization.
 func (tf *Factory) AddExporter(exporter Exporter) *Factory {
 	tf.exporters = append(tf.exporters, exporter)
+	return tf
+}
+
+// RemoveAllExporters clear exporters list, nothing will be exported
+func (tf *Factory) RemoveAllExporters() *Factory {
+	tf.exporters = []Exporter{}
 	return tf
 }
 

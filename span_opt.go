@@ -6,6 +6,10 @@ type SpanOption interface {
 	apply(*Span)
 }
 
+type SpanOptionFunc func(*Span)
+
+func (f SpanOptionFunc) apply(span *Span) { f(span) }
+
 type withTimestampOption struct {
 	ts time.Time
 }
@@ -18,6 +22,30 @@ func WithTimestamp(ts time.Time) SpanOption {
 
 func (o withTimestampOption) apply(span *Span) {
 	span.startedTs = o.ts
+}
+
+func WithTimestampUtcNow() SpanOption {
+	return (SpanOptionFunc)(func(span *Span) {
+		span.startedTs = time.Now().UTC()
+	})
+}
+
+func WithTimestampNow() SpanOption {
+	return (SpanOptionFunc)(func(span *Span) {
+		span.startedTs = time.Now()
+	})
+}
+
+func WithNewSpanID() SpanOption {
+	return (SpanOptionFunc)(func(span *Span) {
+		span.id = NewSpanID()
+	})
+}
+
+func WithHostName() SpanOption {
+	return (SpanOptionFunc)(func(span *Span) {
+		span.host = host
+	})
 }
 
 type withNameOption struct {

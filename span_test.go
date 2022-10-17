@@ -54,7 +54,7 @@ func TestSpanJson(t *testing.T) {
 
 	require.Empty(t, span.Component())
 
-	bb, err := span.Json()
+	bb, err := span.MarshalJSON()
 	require.NoError(t, err)
 	str := string(bb)
 	require.Contains(t, str, "danila")

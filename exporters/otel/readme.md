@@ -1,0 +1,1 @@
+Exporter [to opentelemetry go instrumentation](https://opentelemetry.io/docs/instrumentation/go/)

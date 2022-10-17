@@ -4,6 +4,7 @@ import (
 	"github.com/KasperskyLab/klogga"
 	"github.com/KasperskyLab/klogga/util/testutil"
 	"github.com/stretchr/testify/require"
+	"sync"
 	"testing"
 	"time"
 )
@@ -145,4 +146,42 @@ func TestWriteLotsOfSpans(t *testing.T) {
 	require.True(t, len(tw.GetSpans()) >= 5)
 	time.Sleep(150 * time.Millisecond)
 	require.True(t, len(tw.GetSpans()) >= 10)
+}
+
+func TestShutdownTwice(t *testing.T) {
+	tw := &exporterStub{}
+	rawTracer := New(
+		tw, Config{
+			BatchSize: 1000,
+			Timeout:   100 * time.Millisecond,
+		},
+	)
+	tf := klogga.NewFactory(rawTracer)
+
+	err := tf.Shutdown(testutil.Timeout())
+	require.NoError(t, err)
+	err = tf.Shutdown(testutil.Timeout())
+	require.NoError(t, err)
+}
+
+func TestShutdownManyGoroutines(t *testing.T) {
+	tw := &exporterStub{}
+	rawTracer := New(
+		tw, Config{
+			BatchSize: 1000,
+			Timeout:   100 * time.Millisecond,
+		},
+	)
+	tf := klogga.NewFactory(rawTracer)
+
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			err := tf.Shutdown(testutil.Timeout())
+			require.NoError(t, err)
+		}()
+	}
+	wg.Wait()
 }

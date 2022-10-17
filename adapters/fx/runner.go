@@ -2,6 +2,7 @@ package fx
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/KasperskyLab/klogga"
 	"go.uber.org/fx"
@@ -56,20 +57,22 @@ func (rr RunnersGroup) RegisterWithErrors(tf klogga.TracerProvider, lc fx.Lifecy
 		ctx, cancelFunc := context.WithCancel(context.Background())
 		lc.Append(ToHookWithCtx(runner, cancelFunc))
 		go func(r Runner) {
+			runnerName := reflect.TypeOf(r).String()
 			select {
 			case err := <-re.Error():
+				if err == nil {
+					err = errors.New("<nil error>")
+				}
 				klogga.Message("runner error").
-					Tag("runner", reflect.TypeOf(r).String()).
+					Tag("runner", runnerName).
 					ErrSpan(err).FlushTo(trs)
+
+				if err := s.Shutdown(); err != nil {
+					klogga.Message("shutdowner error").
+						Tag("runner", runnerName).
+						ErrSpan(err).FlushTo(trs)
+				}
 			case <-ctx.Done():
-
-			}
-
-			if err := s.Shutdown(); err != nil {
-				klogga.Message("shutdowner error").
-					Tag("runner", reflect.TypeOf(r).String()).
-					ErrSpan(err).FlushTo(trs)
-
 			}
 		}(runner)
 	}
@@ -86,9 +89,8 @@ func ToHookWithCtx(r Runner, onStopped context.CancelFunc) fx.Hook {
 	return fx.Hook{
 		OnStart: r.Start,
 		OnStop: func(ctx context.Context) error {
-			err := r.Stop(ctx)
-			onStopped()
-			return err
+			defer onStopped()
+			return r.Stop(ctx)
 		},
 	}
 }

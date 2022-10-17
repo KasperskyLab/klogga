@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"github.com/KasperskyLab/klogga"
-	"github.com/KasperskyLab/klogga/exporters/golog"
+	"github.com/KasperskyLab/klogga/util"
 	"time"
 )
 
 func main() {
 	// kreating a factory, with the simplest exporter
-	tf := klogga.NewFactory(golog.New(nil))
+	tf := util.DefaultFactory()
 
 	// kreating a tracer with a package name
 	trs := tf.NamedPkg()
@@ -26,5 +26,4 @@ func main() {
 	span.Val("meaning", 42)
 	// sleep a bit, to have us some non-zero duration
 	time.Sleep(154 * time.Millisecond)
-
 }

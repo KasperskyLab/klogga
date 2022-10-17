@@ -22,6 +22,10 @@ func TestConnectPg(t *testing.T) {
 	_, err = rawConn.Exec("create schema if not exists audit")
 	require.NoError(t, err)
 
+	// truncate audit.example_test table to ensure clean test
+	// ignore errors
+	_, _ = rawConn.Exec("TRUNCATE audit.example_test")
+
 	// postgres exporter needs a separate tracer, to write its own errors
 	// this tracer shod use some simpler exporter, like golog, anything closer than external database
 	// be careful not to recurse that )
