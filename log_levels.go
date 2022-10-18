@@ -5,6 +5,8 @@ type LogLevel int
 
 func (l LogLevel) String() string {
 	switch l {
+	case Debug:
+		return "D"
 	case Info:
 		return "I"
 	case Warn:
@@ -19,6 +21,7 @@ func (l LogLevel) String() string {
 }
 
 const (
+	Debug LogLevel = -1
 	Info  LogLevel = 0
 	Warn  LogLevel = 1
 	Error LogLevel = 2

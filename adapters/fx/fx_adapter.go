@@ -22,18 +22,18 @@ func (t fxTracer) LogEvent(event fxevent.Event) {
 	span.Tag("event", reflect.TypeOf(event).String())
 	switch e := event.(type) {
 	case *fxevent.OnStartExecuting:
-		span.OverrideName(e.CallerName).Tag("callee", e.FunctionName)
+		span.OverrideName("OnStartExecuting").Tag("caller", e.CallerName).Tag("callee", e.FunctionName)
 	case *fxevent.OnStartExecuted:
-		span.OverrideName(e.CallerName).Tag("callee", e.FunctionName)
+		span.OverrideName("OnStartExecuted").Tag("caller", e.CallerName).Tag("callee", e.FunctionName)
 		if e.Err != nil {
 			span.ErrVoid(e.Err)
 		} else {
 			span.Message("runtime:" + e.Runtime.String())
 		}
 	case *fxevent.OnStopExecuting:
-		span.OverrideName(e.CallerName).Tag("callee", e.FunctionName)
+		span.OverrideName("OnStopExecuting").Tag("caller", e.CallerName).Tag("callee", e.FunctionName)
 	case *fxevent.OnStopExecuted:
-		span.OverrideName(e.CallerName).Tag("callee", e.FunctionName)
+		span.OverrideName("OnStopExecuted").Tag("caller", e.CallerName).Tag("callee", e.FunctionName)
 		if e.Err != nil {
 			span.ErrVoid(e.Err)
 		} else {
@@ -45,9 +45,9 @@ func (t fxTracer) LogEvent(event fxevent.Event) {
 		span.OverrideName("Provided").
 			Message("output types:" + strings.Join(e.OutputTypeNames, ",")).ErrVoid(e.Err)
 	case *fxevent.Invoking:
-		span.OverrideName(e.FunctionName)
+		span.OverrideName("Invoking").Tag("func", e.FunctionName)
 	case *fxevent.Invoked:
-		span.OverrideName(e.FunctionName)
+		span.OverrideName("Invoked").Tag("func", e.FunctionName)
 		if e.Err != nil {
 			span.ErrSpan(e.Err).Message("stack:" + e.Trace)
 		}
@@ -62,7 +62,7 @@ func (t fxTracer) LogEvent(event fxevent.Event) {
 	case *fxevent.Started:
 		span.OverrideName("Started").ErrVoid(e.Err)
 	case *fxevent.LoggerInitialized:
-		span.OverrideName(e.ConstructorName).ErrVoid(e.Err)
+		span.OverrideName("LoggerInitialized").Tag("caller", e.ConstructorName).ErrVoid(e.Err)
 	}
 }
 
@@ -80,12 +80,15 @@ func Module(tf klogga.TracerProvider) fx.Option {
 
 // Full Set up the default logging for the app
 // registering logging and the klogga factory,
-// that later can be reconfigured with more loggers
+// that later can be reconfigured with more loggers via fx.Decorate
 func Full() fx.Option {
 	tf := klogga.NewFactory(golog.New(nil))
 	return fx.Options(
 		Module(tf),
 		fx.Supply(tf),
 		fx.Provide(func(tf *klogga.Factory) klogga.TracerProvider { return tf }),
-	)
+		fx.Invoke(func(tf *klogga.Factory, lc fx.Lifecycle) error {
+			lc.Append(fx.Hook{OnStop: tf.Shutdown})
+			return nil
+		}))
 }

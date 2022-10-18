@@ -47,14 +47,33 @@ type Span struct {
 }
 
 // Start preferred way to start a new span, automatically sets basic span fields like class, name, host
-func Start(ctx1 context.Context, opts ...SpanOption) (span *Span, ctx context.Context) {
+func Start(ctx context.Context, opts ...SpanOption) (*Span, context.Context) {
+	return startInternal(ctx, opts...)
+}
+
+// StartLeaf start new span without returning resulting context i.e. no child spans possibility
+func StartLeaf(ctx context.Context, opts ...SpanOption) *Span {
+	span, _ := startInternal(ctx, opts...)
+	return span
+}
+
+// Message is the simplest way to start a span, in the shortest way possible
+// it doesn't use context, and doesn't return one.
+// It is strongly discouraged to use Message unless for testing or showing off purposes.
+func Message(message string, opts ...SpanOption) *Span {
+	span, _ := startInternal(context.Background(), opts...)
+	span.Message(message)
+	return span
+}
+
+func startInternal(ctx1 context.Context, opts ...SpanOption) (span *Span, ctx context.Context) {
 	span = &Span{
-		id:             NewSpanID(),
-		host:           host,
-		startedTs:      time.Now(),
 		tags:           map[string]interface{}{},
 		vals:           map[string]interface{}{},
 		propagatedTags: map[string]interface{}{},
+	}
+	for _, opt := range SpanDefaults {
+		opt.apply(span)
 	}
 
 	if p := CtxActiveSpan(ctx1); p != nil {
@@ -74,7 +93,7 @@ func Start(ctx1 context.Context, opts ...SpanOption) (span *Span, ctx context.Co
 	}
 
 	if span.packageName == "" || span.className == "" || span.name == "" {
-		packageName, className, funcName := reflectutil.GetPackageClassFunc()
+		packageName, className, funcName := reflectutil.GetPackageClassFunc(3)
 		if span.packageName == "" {
 			span.packageName = packageName
 		}
@@ -89,41 +108,6 @@ func Start(ctx1 context.Context, opts ...SpanOption) (span *Span, ctx context.Co
 	return span, context.WithValue(ctx1, activeSpanKey{}, span)
 }
 
-// StartLeaf start new span without returning resulting context i.e. no child spans possibility
-func StartLeaf(ctx context.Context, opts ...SpanOption) (span *Span) {
-	packageName, className, funcName := reflectutil.GetPackageClassFunc()
-	span, _ = Start(ctx, append([]SpanOption{
-		WithName(funcName),
-		WithPackageClass(packageName, className),
-	}, opts...)...)
-	span.packageName = packageName
-	span.className = className
-	return span
-}
-
-// Message is the simplest way to start a span, in the shortest way possible
-// it doesn't use context, and doesn't return one.
-// It is strongly discouraged to use Message unless for testing purposes.
-func Message(message string, opts ...SpanOption) *Span {
-	packageName, className, funcName := reflectutil.GetPackageClassFunc()
-	span, _ := Start(context.Background(), append([]SpanOption{
-		WithPackageClass(packageName, className),
-		WithName(funcName),
-	}, opts...)...)
-	span.Message(message)
-	return span
-}
-
-// StartFromParentID starts new span with externally defined parent span ID
-// Deprecated: use SpanOptions
-func StartFromParentID(ctx context.Context, parentSpanID SpanID, traceID TraceID) (*Span, context.Context) {
-	p, c, f := reflectutil.GetPackageClassFunc()
-	span, ctx := Start(ctx, WithPackageClass(p, c), WithName(f))
-	span.parentID = parentSpanID
-	span.traceID = traceID
-	return span, ctx
-}
-
 func (s *Span) ID() SpanID {
 	return s.id
 }
@@ -136,13 +120,14 @@ func (s *Span) Parent() *Span {
 	return s.parent
 }
 
-func (s *Span) Stop() {
+func (s *Span) Stop() *Span {
 	// no need to sync this, as the race won't matter
 	if !s.finishedTs.IsZero() {
-		return
+		return s
 	}
 	s.finishedTs = time.Now()
 	s.duration = s.finishedTs.Sub(s.startedTs)
+	return s
 }
 
 func (s *Span) IsFinished() bool {
@@ -158,6 +143,10 @@ func (s *Span) ParentID() SpanID {
 
 func (s *Span) StartedTs() time.Time {
 	return s.startedTs
+}
+
+func (s *Span) FinishedTs() time.Time {
+	return s.finishedTs
 }
 
 func (s *Span) Host() string {
@@ -290,12 +279,14 @@ type Enricher interface {
 	Enrich(span *Span) *Span
 }
 
-func (s *Span) EnrichFrom(e Enricher) *Span {
-	e.Enrich(s)
+func (s *Span) EnrichFrom(ee ...Enricher) *Span {
+	for _, e := range ee {
+		e.Enrich(s)
+	}
 	return s
 }
 
-// Err adds error to the span, subsequent call combined errors
+// Err adds error to the span, subsequent call combined errors, returns all combined errors
 func (s *Span) Err(err error) error {
 	if err == nil {
 		return nil
@@ -305,7 +296,7 @@ func (s *Span) Err(err error) error {
 		return err
 	}
 	s.errs = errs.Append(s.errs, err)
-	return err
+	return s.errs
 }
 
 // ErrWrapf shorthand for errors wrap
@@ -333,6 +324,15 @@ func (s *Span) ErrRecover(rec interface{}, stackBytes []byte) *Span {
 func (s *Span) ErrSpan(err error) *Span {
 	_ = s.Err(err)
 	return s
+}
+
+// ErrFinish convenience method to flush span with error and ignore otherwise
+func (s *Span) ErrFinish(err error, trs Tracer) error {
+	if err == nil {
+		return nil
+	}
+	s.ErrSpan(err).FlushTo(trs)
+	return err
 }
 
 // DeferErr adds defer errors to span. Not the same as Err!
@@ -368,9 +368,8 @@ func (s *Span) WarnWith(err error) error {
 	return err
 }
 
-// Message shorthand for generic Val("message", ... ) value
-// overwrites previous message
-// usage of specific tags and values is preferred!
+// Message shorthand for generic Val("message", ... ) value, overwrites previous message
+// usage of plain text messages is discouraged, use tags and values!
 func (s *Span) Message(message string) *Span {
 	return s.Val("message", message)
 }
@@ -380,6 +379,12 @@ func (s *Span) Message(message string) *Span {
 func (s *Span) Level(level LogLevel) *Span {
 	s.level = level
 	return s
+}
+
+// LevelGet enhancement for better exporters and serializers implementations
+// issue https://github.com/KasperskyLab/klogga/issues/7
+func (s *Span) LevelGet() LogLevel {
+	return s.level
 }
 
 // Tags get a copy of span tags
@@ -529,46 +534,16 @@ func (s *Span) EWState() string {
 	return res
 }
 
-func (s *Span) Json() ([]byte, error) {
-	if s == nil {
-		return nil, nil
-	}
-
-	jsonStruct := struct {
-		ID           SpanID
-		ParentID     SpanID
-		TraceID      TraceID
-		Ts           string
-		Level        string
-		PackageClass string
-		Name         string
-		Duration     time.Duration
-		Error        error
-		DeferError   error
-		Warn         error
-		Tags         map[string]interface{}
-		Vals         map[string]interface{}
-	}{
-		ID:           s.id,
-		ParentID:     s.parentID,
-		TraceID:      s.traceID,
-		Ts:           s.startedTs.Format(TimestampLayout),
-		Level:        s.EWState(),
-		PackageClass: s.PackageClass(),
-		Name:         s.name,
-		Duration:     s.Duration(),
-		Error:        s.Errs(),
-		DeferError:   s.DeferErrs(),
-		Warn:         s.Warns(),
-		Tags:         s.Tags(),
-		Vals:         s.Vals(),
-	}
-	return json.Marshal(&jsonStruct)
-}
-
 // FlushTo accept tracer and call trs.Finish, shorthand for chaining
 func (s *Span) FlushTo(trs Tracer) {
 	trs.Finish(s)
+}
+
+// FlushOnError if span has errors accept tracer and call trs.Finish
+func (s *Span) FlushOnError(trs Tracer) {
+	if s.HasErr() || s.HasDeferErr() {
+		trs.Finish(s)
+	}
 }
 
 // CreateErrSpanFrom creates span describing an error in a flat way
@@ -579,11 +554,13 @@ func CreateErrSpanFrom(ctx context.Context, span *Span) *Span {
 
 	errSpan := StartLeaf(ctx, WithTraceID(span.TraceID()))
 	errSpan.parent = span
+	errSpan.parentID = span.ID()
 	errSpan.startedTs = span.StartedTs()
 	errSpan.Tag("component", span.Component())
 	errSpan.host = span.Host()
-	errSpan.name = span.Name()
+	errSpan.packageName = span.Package()
 	errSpan.className = span.Class()
+	errSpan.name = span.Name()
 	errSpan.errs = span.errs
 	errSpan.warns = span.warns
 	errSpan.deferErrs = span.deferErrs

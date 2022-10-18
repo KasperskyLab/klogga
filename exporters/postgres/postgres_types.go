@@ -42,15 +42,25 @@ func GetPgTypeVal(a interface{}) (string, interface{}) {
 	case fmt.Stringer:
 		return PgTextTypeName, v.String()
 	default:
-		if v != reflect.Struct {
+		t := reflect.TypeOf(v)
+		if isJsonDesired(t) || t.Kind() == reflect.Pointer && isJsonDesired(t.Elem()) {
 			data, err := json.Marshal(v)
-			if err != nil {
-				return PgTextTypeName, fmt.Sprintf("%v", v)
+			if err == nil {
+				return PgJsonbTypeName, data
 			}
-			return PgJsonbTypeName, data
 		}
 		return PgTextTypeName, fmt.Sprintf("%v", v)
 	}
+}
+
+func isJsonDesired(t reflect.Type) bool {
+	if t == nil {
+		return false
+	}
+	return t.Kind() == reflect.Struct ||
+		t.Kind() == reflect.Slice ||
+		t.Kind() == reflect.Map ||
+		t.Kind() == reflect.Array
 }
 
 // finds column value by name in tags of vals of the span
@@ -75,12 +85,14 @@ type ErrDescriptor struct {
 }
 
 func newErrDescriptor(table string, span *klogga.Span, col, existingCol ColumnSchema) ErrDescriptor {
-	return ErrDescriptor{
+	descriptor := ErrDescriptor{
 		Table:          table,
 		Span:           span,
 		Column:         col,
 		ExistingColumn: existingCol,
 	}
+	span.ErrVoid(descriptor.Err())
+	return descriptor
 }
 
 func (e *ErrDescriptor) Err() error {

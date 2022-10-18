@@ -44,10 +44,16 @@ func (c *Config) GetBufferSize() int {
 	return c.GetBatchSize() * 5
 }
 
-func ConfigDefault() Config {
+// ConfigDefault generates default batcher config
+// non-nil optional config will be used instead
+func ConfigDefault(cc ...*Config) Config {
+	if len(cc) > 0 && cc[0] != nil {
+		return *cc[0]
+	}
 	return Config{
-		BatchSize: 20,
-		Timeout:   2 * time.Second,
+		BatchSize:  512,
+		BufferSize: 2048,
+		Timeout:    5 * time.Second,
 	}
 }
 
@@ -132,8 +138,12 @@ func (b *Batcher) Write(ctx context.Context, spans []*klogga.Span) error {
 
 func (b *Batcher) Shutdown(ctx context.Context) (err error) {
 	b.TriggerFlush()
+	if b.stop == nil {
+		return nil
+	}
 	select {
 	case b.stop <- struct{}{}:
+		b.stop = nil
 	case <-ctx.Done():
 		err = ctx.Err()
 	}

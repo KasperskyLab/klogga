@@ -8,11 +8,12 @@ import (
 
 func TestAppend(t *testing.T) {
 	require.Nil(t, Append(nil, nil))
+	require.Nil(t, Append(nil, nil, nil))
 	require.NotNil(t, Append(errors.New("err"), nil))
 	require.NotNil(t, Append(nil, errors.New("err")))
 }
 
-func TestAppenManyNils(t *testing.T) {
+func TestAppendManyNils(t *testing.T) {
 	source := errors.New("err")
 	err := Append(nil, nil, nil, source)
 	require.NotNil(t, err)
