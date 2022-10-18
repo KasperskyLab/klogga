@@ -12,8 +12,6 @@ type LoggerV2 struct {
 }
 
 type Conf struct {
-	// 0 - log everything
-	// 4 - log nothing
 	VerbosityLevel klogga.LogLevel
 }
 

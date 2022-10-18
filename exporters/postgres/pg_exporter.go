@@ -24,15 +24,15 @@ const (
 	DefaultSchema          = "audit"
 	ErrorPostgresTable     = DefaultSchema + "." + ErrorPostgresTableName
 
-	defaultWriteTimeout         = time.Second
-	msgUnableToConnectPG        = "unable to connect PG"
-	msgUnableToBeginTx          = "unable to begin TX"
-	msgUnableToCommitTx         = "unable to commit TX"
-	msgUnableToPrepareStatement = "unable to prepare statement"
-	msgUnableToExecStatement    = "unable to exec statement"
-	msgUnableToQuery            = "unable to query"
-	magUnableToScan             = "unable to scan"
-	msgUnableToExec             = "unable to exec"
+	defaultWriteTimeout = time.Second
+
+	messageUnableToConnectPG = "unable to connect to postgres"
+	messageUnableToBeginTx   = "unable to begin transaction"
+	messageUnableToCommitTx  = "unable to commit transaction"
+	messageUnableToPrepare   = "unable to prepare statement"
+	messageUnableToQuery     = "unable to query"
+	messageUnableToScan      = "unable to scan"
+	messageUnableToExec      = "unable to exec"
 )
 
 // Conf parameters on how klogga works with DB
@@ -71,7 +71,7 @@ type Exporter struct {
 // New to be used with batcher
 // cfg - config
 // connFactory - connection to PG
-// trs - a tracer to write pg_exporter logs, like DB changes, pass nil to setup default golog tracer
+// trs - a tracer to write pg_exporter logs, like DB changes, pass nil to set default golog tracer
 func New(cfg *Conf, connFactory Connector, trs klogga.Tracer) *Exporter {
 	if trs == nil {
 		trs = klogga.NewFactory(golog.New(nil)).NamedPkg()
@@ -167,8 +167,11 @@ func (e *Exporter) Write(ctx context.Context, spans []*klogga.Span) error {
 		},
 	)
 
-	recordSets, errSpans := e.createRecordSets(spans...)
-	e.writeErrSpans(ctx, errSpans)
+	recordSets, errDescriptors := e.createRecordSets(spans...)
+	for i := 0; i < len(errDescriptors); i++ {
+		e.writeErr(ctx, errDescriptors[i].Span)
+	}
+
 	for tableName, recordSet := range recordSets {
 		if !e.cfg.SkipSchemaCreation {
 			err := e.updateSchema(ctx, tableName, recordSet)
@@ -203,7 +206,9 @@ func (e *Exporter) updateSchema(ctx context.Context, tableName string, dataset R
 	} else {
 		alterSchema, failures := schema.GetAlterSchema(dataset)
 		if len(failures) > 0 {
-			e.writeErrSpans(ctx, failures)
+			for i := 0; i < len(failures); i++ {
+				e.writeErr(ctx, failures[i].Span)
+			}
 			return span.Err(
 				errors.Errorf(
 					"alter table failed (%v failures), first failure: %v", len(failures), failures[0].Err(),
@@ -232,7 +237,7 @@ func (e *Exporter) writeRecordSet(ctx context.Context, tableName string, recordS
 
 	conn, err := e.connFactory.GetConnection(ctx)
 	if err != nil {
-		span.ErrVoid(errors.Wrap(err, msgUnableToConnectPG))
+		span.ErrVoid(errors.Wrap(err, messageUnableToConnectPG))
 		return
 	}
 	defer func() { span.DeferErr(conn.Close()) }()
@@ -240,7 +245,7 @@ func (e *Exporter) writeRecordSet(ctx context.Context, tableName string, recordS
 	isCommitted := false
 	tx, err := conn.BeginTx(ctx, nil)
 	if err != nil {
-		span.ErrVoid(errors.Wrap(err, msgUnableToBeginTx))
+		span.ErrVoid(errors.Wrap(err, messageUnableToBeginTx))
 		return
 	}
 	defer func() {
@@ -254,7 +259,7 @@ func (e *Exporter) writeRecordSet(ctx context.Context, tableName string, recordS
 	span.Val("columns_count", recordSet.Schema.ColumnsCount())
 	stmt, err := tx.Prepare(query)
 	if err != nil {
-		span.ErrVoid(errors.Wrap(err, msgUnableToPrepareStatement))
+		span.ErrVoid(errors.Wrap(err, messageUnableToPrepare))
 		return
 	}
 	defer func() {
@@ -271,8 +276,8 @@ func (e *Exporter) writeRecordSet(ctx context.Context, tableName string, recordS
 			strWarn = sErr.Error()
 		}
 
-		vv := []interface{}{
-			span.StartedTs(),
+		vv := []any{
+			span.StartedTs().UTC(),
 			span.ID().Bytes(),
 			span.TraceID().AsUUID(),
 			span.Host(),
@@ -295,7 +300,7 @@ func (e *Exporter) writeRecordSet(ctx context.Context, tableName string, recordS
 		}
 
 		if _, err := stmt.ExecContext(ctx, vv...); err != nil {
-			span.ErrVoid(errors.Wrap(err, msgUnableToExecStatement))
+			span.ErrVoid(errors.Wrap(err, messageUnableToExec))
 			continue
 		}
 	}
@@ -306,7 +311,7 @@ func (e *Exporter) writeRecordSet(ctx context.Context, tableName string, recordS
 	}
 
 	if err := tx.Commit(); err != nil {
-		span.ErrVoid(errors.Wrap(err, msgUnableToCommitTx))
+		span.ErrVoid(errors.Wrap(err, messageUnableToCommitTx))
 	}
 	isCommitted = true
 }
@@ -324,12 +329,12 @@ func (e *Exporter) createTable(ctx context.Context, tableName string, schema *Ta
 
 	conn, err := e.connFactory.GetConnection(ctx)
 	if err != nil {
-		return span.Err(errors.Wrap(err, msgUnableToConnectPG))
+		return span.Err(errors.Wrap(err, messageUnableToConnectPG))
 	}
 	defer func() { span.DeferErr(conn.Close()) }()
 	if _, err := conn.ExecContext(ctx, q); err != nil {
 		span.Val(vals.Query, q)
-		return span.Err(errors.Wrap(err, msgUnableToExec))
+		return span.Err(errors.Wrap(err, messageUnableToExec))
 	}
 	return nil
 }
@@ -349,11 +354,11 @@ func (e *Exporter) alterTable(ctx context.Context, tableName string, schema *Tab
 
 	conn, err := e.connFactory.GetConnection(ctx)
 	if err != nil {
-		return span.Err(errors.Wrap(err, msgUnableToConnectPG))
+		return span.Err(errors.Wrap(err, messageUnableToConnectPG))
 	}
 	defer func() { span.DeferErr(conn.Close()) }()
 	if _, err := conn.ExecContext(ctx, q); err != nil {
-		return span.Err(errors.Wrap(err, msgUnableToExec))
+		return span.Err(errors.Wrap(err, messageUnableToExec))
 	}
 	return nil
 }
@@ -367,7 +372,7 @@ func (e *Exporter) loadSchemas(ctx context.Context) error {
 	defer cancel()
 	conn, err := e.connFactory.GetConnection(ctx)
 	if err != nil {
-		return span.Err(errors.Wrap(err, msgUnableToConnectPG))
+		return span.Err(errors.Wrap(err, messageUnableToConnectPG))
 	}
 	defer func() { span.DeferErr(conn.Close()) }()
 
@@ -380,10 +385,10 @@ func (e *Exporter) loadSchemas(ctx context.Context) error {
 
 	rows, err := conn.QueryContext(ctx, query, args...)
 	if err != nil {
-		return span.Err(errors.Wrap(err, msgUnableToQuery))
+		return span.Err(errors.Wrap(err, messageUnableToQuery))
 	}
 	if err := rows.Err(); err != nil {
-		return span.Err(errors.Wrap(err, msgUnableToQuery))
+		return span.Err(errors.Wrap(err, messageUnableToQuery))
 	}
 	defer func() {
 		span.DeferErr(rows.Close())
@@ -394,7 +399,7 @@ func (e *Exporter) loadSchemas(ctx context.Context) error {
 		var tableName string
 		var colSchema ColumnSchema
 		if err := rows.Scan(&tableName, &colSchema.Name, &colSchema.DataType); err != nil {
-			return span.Err(errors.Wrap(err, magUnableToScan))
+			return span.Err(errors.Wrap(err, messageUnableToScan))
 		}
 		if _, found := tables[tableName]; !found {
 			tables[tableName] = NewTableSchema([]*ColumnSchema{})
@@ -419,47 +424,45 @@ func (e *Exporter) loadSchemas(ctx context.Context) error {
 	return nil
 }
 
-func (e *Exporter) writeErrSpans(ctx context.Context, errDescrs []ErrDescriptor) {
-	if len(errDescrs) == 0 {
-		return
-	}
+func (e *Exporter) writeErr(ctx context.Context, errSpan *klogga.Span) {
 	span, ctx := klogga.Start(ctx)
 	defer e.writeIfErr(span)
-	span.Val(vals.Count, len(errDescrs))
 
 	conn, err := e.connFactory.GetConnection(ctx)
 	if err != nil {
-		span.ErrVoid(errors.Wrap(err, msgUnableToConnectPG))
+		span.ErrVoid(errors.Wrap(err, messageUnableToConnectPG))
 		return
 	}
 	defer func() { span.DeferErr(conn.Close()) }()
 
 	statementText := e.errTable.InsertStatement(e.cfg.SchemaName, ErrorPostgresTableName)
 
-	for i := 0; i < len(errDescrs); i++ {
-		errDescr := errDescrs[i]
-		warn := ""
-		if errDescr.Warn() != nil {
-			warn = errDescr.Warn().Error()
-		}
-		_, err := conn.ExecContext(
-			ctx,
-			statementText,
-			errDescr.Span.StartedTs(),
-			errDescr.Span.ID().Bytes(),
-			errDescr.Span.TraceID().AsUUID(),
-			errDescr.Span.Host(),
-			errDescr.Span.PackageClass(),
-			errDescr.Span.Name(),
-			errDescr.Span.ParentID().AsNullableBytes(),
-			errDescr.Err().Error(),
-			warn,
-			errDescr.Span.Duration(),
-			errDescr.Span.Component(),
-		)
-		if err != nil {
-			span.Val(vals.Query, statementText).ErrVoid(errors.Wrap(err, "unable to write bad span"))
-		}
+	warnText := ""
+	if errSpan.HasWarn() {
+		warnText = errSpan.Warns().Error()
+	}
+	errText := ""
+	if errSpan.HasErr() {
+		errText = errSpan.Errs().Error()
+	}
+
+	_, err = conn.ExecContext(
+		ctx,
+		statementText,
+		errSpan.StartedTs().UTC(),
+		errSpan.ID().Bytes(),
+		errSpan.TraceID().AsUUID(),
+		errSpan.Host(),
+		errSpan.PackageClass(),
+		errSpan.Name(),
+		errSpan.ParentID().AsNullableBytes(),
+		errText,
+		warnText,
+		errSpan.Duration(),
+		errSpan.Component(),
+	)
+	if err != nil {
+		span.Val(vals.Query, statementText).ErrVoid(errors.Wrap(err, "unable to write bad span"))
 	}
 }
 
@@ -488,18 +491,18 @@ func (e *Exporter) createRecordSets(spans ...*klogga.Span) (map[string]RecordSet
 
 		for name, val := range e.getSpanVals(span) {
 			name = toPgColumnName(name)
-			col, found := dataset.Schema.Column(name)
+			existingCol, found := dataset.Schema.Column(name)
 			valType, _ := GetPgTypeVal(val)
-			newColumn := ColumnSchema{
+			newCol := ColumnSchema{
 				Name:     name,
 				DataType: valType,
 			}
 			if !found {
-				dataset.Schema.AddColumn(newColumn)
+				dataset.Schema.AddColumn(newCol)
 				continue
 			}
-			if !strings.EqualFold(newColumn.DataType, col.DataType) {
-				errSpans = append(errSpans, newErrDescriptor(tableName, span, newColumn, *col))
+			if existingCol.DataType != valType {
+				errSpans = append(errSpans, newErrDescriptor("", span, newCol, *existingCol))
 			}
 		}
 
@@ -545,5 +548,6 @@ func (e *Exporter) getSpanVals(span *klogga.Span) map[string]interface{} {
 func (e *Exporter) writeIfErr(span *klogga.Span) {
 	if span.HasErr() {
 		span.FlushTo(e.trs)
+		e.writeErr(context.Background(), span)
 	}
 }

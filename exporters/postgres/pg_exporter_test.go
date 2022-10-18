@@ -93,3 +93,38 @@ func TestPgValueJsonEmpty(t *testing.T) {
 	require.Equal(t, PgJsonbTypeName, pgt)
 	require.Equal(t, "null", v)
 }
+
+type StringBased string
+
+func TestPgValueStringBased(t *testing.T) {
+	vv := "lalala"
+	pgt, v := GetPgTypeVal(StringBased(vv))
+	require.Equal(t, PgTextTypeName, pgt)
+	require.Equal(t, v, vv)
+}
+
+type structType struct {
+	V1 int
+	V2 int
+}
+
+func TestStructType(t *testing.T) {
+	pgt, _ := GetPgTypeVal(structType{
+		V1: 11,
+		V2: 12,
+	})
+	require.Equal(t, PgJsonbTypeName, pgt)
+}
+
+func TestStructPointerType(t *testing.T) {
+	pgt, _ := GetPgTypeVal(&structType{
+		V1: 11,
+		V2: 12,
+	})
+	require.Equal(t, PgJsonbTypeName, pgt)
+}
+
+func TestArrayType(t *testing.T) {
+	pgt, _ := GetPgTypeVal([]int{2, 3, 4})
+	require.Equal(t, PgJsonbTypeName, pgt)
+}

@@ -7,7 +7,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"time"
 )
 
 // Exporter basic exporter of klogga spans to otel tracer
@@ -38,7 +37,7 @@ func (t *Exporter) Write(ctx context.Context, spans []*klogga.Span) error {
 		}
 		_, otelSpan := t.tracer.Start(
 			trace.ContextWithSpanContext(ctx, trace.NewSpanContext(config)),
-			span.Name(),
+			span.Component().String()+"/"+span.PackageClass()+"."+span.Name(),
 			trace.WithTimestamp(span.StartedTs()),
 		)
 
@@ -68,8 +67,7 @@ func (t *Exporter) Write(ctx context.Context, spans []*klogga.Span) error {
 
 		// possibly should have something like this:
 		// otelSpan.SetAttributes(attribute.String("klogga_id", span.ID().String()))
-		time.Sleep(500 * time.Millisecond)
-		otelSpan.End()
+		otelSpan.End(trace.WithTimestamp(span.FinishedTs()))
 	}
 	return nil
 }

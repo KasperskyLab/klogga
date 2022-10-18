@@ -32,6 +32,8 @@ func (w WriterExporter) Shutdown(context.Context) error {
 }
 
 // WriterTracer adapts tracer to a Writer interface
+// each call to Write writes all bytes as string to Message function
+// intended as an adapter for simplest logging systems that understand only io.Writer interface
 type WriterTracer struct {
 	trs Tracer
 }
